@@ -23,6 +23,8 @@ const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle
     setIsLoading(true);
     setError(null);
     setResult(null);
+    setCopyStatus("idle");
+  
 
     try {
       const res = await fetch("/api/analyze-pr", {
