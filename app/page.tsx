@@ -1,22 +1,52 @@
+
 "use client";
 
 import { FormEvent, useState } from "react";
+
+type AnalysisResult = {
+  summary: string;
+  risks: string[];
+  tests: string[];
+  docsSnippet: string;
+};
 
 export default function HomePage() {
   const [repoUrl, setRepoUrl] = useState("");
   const [prNumber, setPrNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
+    setResult(null);
 
-    // For now, just fake a short "loading" state
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/analyze-pr", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          repoUrl,
+          prNumber,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Request failed with status ${res.status}`);
+      }
+
+      const data = (await res.json()) as AnalysisResult;
+      setResult(data);
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong while analyzing this pull request.");
+    } finally {
       setIsLoading(false);
-      setHasSubmitted(true);
-    }, 800);
+    }
   };
 
   return (
@@ -78,9 +108,16 @@ export default function HomePage() {
             </button>
           </form>
 
+          {error && (
+            <p className="text-xs text-red-400 pt-2">
+              {error}
+            </p>
+          )}
+
           <p className="text-[11px] text-slate-500">
-            Later, this will call GitHub + an AI model. For now, it&apos;s a
-            static preview layout for the hackathon MVP.
+            This prototype currently uses a mock backend response. In the full
+            version, it will call the GitHub API and an AI model to generate
+            PR-aware analysis.
           </p>
         </section>
 
@@ -93,8 +130,8 @@ export default function HomePage() {
             <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 space-y-2">
               <h3 className="text-sm font-semibold">Summary</h3>
               <p className="text-xs text-slate-400">
-                {hasSubmitted
-                  ? "This section will show a high-level natural language summary of what the pull request changes."
+                {result
+                  ? result.summary
                   : "Run an analysis to see an AI-generated summary of the pull request."}
               </p>
             </div>
@@ -103,36 +140,37 @@ export default function HomePage() {
             <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 space-y-2">
               <h3 className="text-sm font-semibold">Potential risks</h3>
               <ul className="text-xs text-slate-400 space-y-1 list-disc list-inside">
-                {hasSubmitted ? (
-                  <>
-                    <li>Risk items based on files and logic touched by the PR.</li>
-                    <li>Edge cases and failure scenarios to watch.</li>
-                    <li>Dependencies or modules that might break silently.</li>
-                  </>
-                ) : (
-                  <li>
-                    Once you analyze a PR, AI will list possible risk areas here.
-                  </li>
-                )}
+                {result
+                  ? result.risks.map((risk, idx) => <li key={idx}>{risk}</li>)
+                  : (
+                    <li>
+                      Once you analyze a PR, AI will list possible risk areas here.
+                    </li>
+                    )}
               </ul>
             </div>
 
             {/* Tests */}
             <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 space-y-2">
               <h3 className="text-sm font-semibold">Suggested tests</h3>
-              <p className="text-xs text-slate-400">
-                {hasSubmitted
-                  ? "AI will propose unit, integration, or end-to-end tests to add or update for this pull request."
-                  : "After analysis, you’ll see test suggestions here based on the type of changes made."}
-              </p>
+              <ul className="text-xs text-slate-400 space-y-1 list-disc list-inside">
+                {result
+                  ? result.tests.map((test, idx) => <li key={idx}>{test}</li>)
+                  : (
+                    <li>
+                      After analysis, you’ll see test suggestions here based on the
+                      type of changes made.
+                    </li>
+                    )}
+              </ul>
             </div>
 
             {/* Docs / Changelog */}
             <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 space-y-2">
               <h3 className="text-sm font-semibold">Docs & changelog snippet</h3>
               <p className="text-xs text-slate-400">
-                {hasSubmitted
-                  ? "AI will generate a short changelog entry or documentation note describing the impact of this PR."
+                {result
+                  ? result.docsSnippet
                   : "This area will show documentation or changelog text that you can paste into your project docs."}
               </p>
             </div>
