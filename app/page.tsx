@@ -165,14 +165,27 @@ export default function HomePage() {
             </div>
 
             {/* Docs / Changelog */}
-            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 space-y-2">
-              <h3 className="text-sm font-semibold">Docs & changelog snippet</h3>
-              <p className="text-xs text-slate-400">
-                {result
-                  ? result.docsSnippet
-                  : "This area will show documentation or changelog text that you can paste into your project docs."}
-              </p>
-            </div>
+  {/* Docs / Changelog */}
+<div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 space-y-3">
+  <h3 className="text-sm font-semibold">Docs & changelog snippet</h3>
+
+  <p className="text-xs text-slate-400">
+    {result
+      ? result.docsSnippet
+      : "This area will show documentation or changelog text that you can paste into your project docs."}
+  </p>
+
+  {result && (
+    <button
+      onClick={() => navigator.clipboard.writeText(result.docsSnippet)}
+      className="text-xs text-sky-400 hover:underline"
+    >
+      Copy to clipboard
+    </button>
+  )}
+</div>
+
+
           </div>
         </section>
 
