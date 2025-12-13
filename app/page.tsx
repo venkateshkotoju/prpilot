@@ -16,12 +16,15 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
     setResult(null);
+    setCopyStatus("idle");
+  
 
     try {
       const res = await fetch("/api/analyze-pr", {
@@ -165,14 +168,43 @@ export default function HomePage() {
             </div>
 
             {/* Docs / Changelog */}
-            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 space-y-2">
-              <h3 className="text-sm font-semibold">Docs & changelog snippet</h3>
-              <p className="text-xs text-slate-400">
-                {result
-                  ? result.docsSnippet
-                  : "This area will show documentation or changelog text that you can paste into your project docs."}
-              </p>
-            </div>
+  {/* Docs / Changelog */}
+<div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 space-y-3">
+  <h3 className="text-sm font-semibold">Docs & changelog snippet</h3>
+
+  <p className="text-xs text-slate-400">
+    {result
+      ? result.docsSnippet
+      : "This area will show documentation or changelog text that you can paste into your project docs."}
+  </p>
+
+ {result && (
+  <button
+    type="button"
+    onClick={async () => {
+      try {
+        await navigator.clipboard.writeText(result.docsSnippet);
+        setCopyStatus("copied");
+        window.setTimeout(() => setCopyStatus("idle"), 1500);
+      } catch {
+        setCopyStatus("failed");
+        window.setTimeout(() => setCopyStatus("idle"), 2000);
+      }
+    }}
+    className="text-xs text-sky-400 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400"
+  >
+    {copyStatus === "copied"
+      ? "Copied!"
+      : copyStatus === "failed"
+        ? "Copy failed"
+        : "Copy to clipboard"}
+  </button>
+)}
+
+
+</div>
+
+
           </div>
         </section>
 
