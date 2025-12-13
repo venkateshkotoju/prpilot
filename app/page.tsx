@@ -16,6 +16,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -175,14 +176,30 @@ export default function HomePage() {
       : "This area will show documentation or changelog text that you can paste into your project docs."}
   </p>
 
-  {result && (
-    <button
-      onClick={() => navigator.clipboard.writeText(result.docsSnippet)}
-      className="text-xs text-sky-400 hover:underline"
-    >
-      Copy to clipboard
-    </button>
-  )}
+ {result && (
+  <button
+    type="button"
+    onClick={async () => {
+      try {
+        await navigator.clipboard.writeText(result.docsSnippet);
+        setCopyStatus("copied");
+        window.setTimeout(() => setCopyStatus("idle"), 1500);
+      } catch {
+        setCopyStatus("failed");
+        window.setTimeout(() => setCopyStatus("idle"), 2000);
+      }
+    }}
+    className="text-xs text-sky-400 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400"
+  >
+    {copyStatus === "copied"
+      ? "Copied!"
+      : copyStatus === "failed"
+        ? "Copy failed"
+        : "Copy to clipboard"}
+  </button>
+)}
+
+
 </div>
 
 
