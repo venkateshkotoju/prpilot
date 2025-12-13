@@ -113,12 +113,11 @@ export default function HomePage() {
               {error}
             </p>
           )}
+<p className="text-[11px] text-slate-500">
+  Powered by the GitHub API and an AI model to generate PR-aware analysis in real time.
+</p>
 
-          <p className="text-[11px] text-slate-500">
-            This prototype currently uses a mock backend response. In the full
-            version, it will call the GitHub API and an AI model to generate
-            PR-aware analysis.
-          </p>
+          
         </section>
 
         {/* Results Layout */}
